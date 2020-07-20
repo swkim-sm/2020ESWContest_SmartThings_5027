@@ -4,8 +4,8 @@
 1. 아나콘다 프롬프트 or CMD 실행  
 
 2. (pip 패키지 업그레이드)  
-`conda upgrade pip  
-pip install upgrade`  
+`conda upgrade pip  `  
+`pip install upgrade  `  
 
 3. 가상환경 새로 설치  
 `conda create -n (env) python=3.7  
