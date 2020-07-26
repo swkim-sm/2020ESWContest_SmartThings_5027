@@ -1,30 +1,52 @@
+#include <SoftwareSerial.h>
 #include <Servo.h> 
 
-int servoPin = 2; //서보모터 2번 핀 지정
+int servoPin = 3; //서보모터 3번 핀 지정
 
 Servo servo; //서보모터 객체 생성
 
-int angle = 0; //서보모터가 움직일 각도 변수 
+int angle = 90; //서보모터가 움직일 각도 변수
+int signalNum = -1;
 
 void setup() { 
     servo.attach(servoPin); // 서보모터 핀 입력
-} 
+    Serial.begin(9600);
+}
 
 void loop() { 
 
-  // 모터의 뻑뻑한 정도에 따라서 유연하게 회전되지 않을 가능성을 고려하여 90~200도로 설정
-  // 추후 하드웨어 설비 상태에 따라서 각도는 유연하게 조정할 예정
-  
-  // 90도에서 200도로 회전
-  for(angle = 90; angle < 200; angle++) { 
-    servo.write(angle); 
-    delay(15); 
+  if (Serial.available() > 0){
+    
+    signalNum = Serial.parseInt();
+    Serial.println(signalNum);
+
+    if (signalNum == 0){
+      changeAngle(90, 40);
+      changeAngle(40, 90);
+    } else if (signalNum == 1){
+      changeAngle(90, 140);
+      changeAngle(140, 90);
+    } else{
+      angle = 90;
+      servo.write(angle); 
+    }
+ 
   }
   
-  // 200도에서 90도로 회전
-  for(angle = 200; angle > 90; angle--) { 
-    servo.write(angle); 
-    delay(15); 
+}
+
+void changeAngle(int startAngle, int endAngle){
+
+  if(startAngle < endAngle){
+    for(angle = startAngle; angle < endAngle; angle++) {
+      servo.write(angle); 
+      delay(15); 
+    }
+  } else { // startAnlge > endAngle
+    for(angle = startAngle; angle > endAngle; angle--) { 
+      servo.write(angle); 
+      delay(15); 
+    }
   }
   
-} 
+}
