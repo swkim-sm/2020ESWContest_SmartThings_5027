@@ -1,21 +1,22 @@
 # -*- coding: utf-8 -*-
-import cv2 as cv
+import cv2
 import math
 import numpy as np
+
 
 # Skin detect and Noise reduction
 def detectSkin(original):
 	# Color binarization
-	ycbcr = cv.cvtColor(src=original, code=cv.COLOR_RGB2YCrCb)
+	ycbcr = cv2.cvtColor(src=original, code=cv2.COLOR_RGB2YCrCb)
 	lower = np.array([0, 85, 135])
 	upper = np.array([255, 135, 180])
-	mask = cv.inRange(ycbcr, lower, upper)
+	mask = cv2.inRange(ycbcr, lower, upper)
 
 	# Noise reduction - Median Filter
-	mask = cv.medianBlur(src=mask, ksize=7)
-	element = cv.getStructuringElement(shape=cv.MORPH_RECT, ksize=(7, 7))
-	mask = cv.morphologyEx(src=mask, op=cv.MORPH_CLOSE, kernel=element)
-	mask = cv.morphologyEx(src=mask, op=cv.MORPH_OPEN, kernel=element)
+	mask = cv2.medianBlur(src=mask, ksize=7)
+	element = cv2.getStructuringElement(shape=cv2.MORPH_RECT, ksize=(7, 7))
+	mask = cv2.morphologyEx(src=mask, op=cv2.MORPH_CLOSE, kernel=element)
+	mask = cv2.morphologyEx(src=mask, op=cv2.MORPH_OPEN, kernel=element)
 	return mask
 
 
@@ -64,30 +65,30 @@ def getHandGesture(points):
 
 # Find out and draw Hand Gesture
 def drawHandGesture(original, mask):
-	font = cv.FONT_HERSHEY_COMPLEX
+	font = cv2.FONT_HERSHEY_COMPLEX
 	fontScale = 1
 	color = (0, 255, 255)
 	thickness = 1
 
-	image, contours, hierarchy = cv.findContours(mask, cv.RETR_LIST, cv.CHAIN_APPROX_SIMPLE)
+	image, contours, hierarchy = cv2.findContours(mask, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
 	for cnt in contours:
 		# 객체 외곽선 그리기
-		cv.drawContours(original, [cnt], 0, (255, 0, 0), 3)  # blue
+		cv2.drawContours(original, [cnt], 0, (255, 0, 0), 3)  # blue
 
 		# 손바닥 중심과 반지름 찾기
-		(x, y), radius = cv.minEnclosingCircle(cnt)
+		(x, y), radius = cv2.minEnclosingCircle(cnt)
 		scale = 0.8
 		center = (int(x), int(y))
 		radius = int(radius)
-		cv.circle(original, center, 2, (0, 255, 0), -1)
-		cv.circle(original, center, int(radius*scale), (0, 255, 0), 2)
+		cv2.circle(original, center, 2, (0, 255, 0), -1)
+		cv2.circle(original, center, int(radius*scale), (0, 255, 0), 2)
 
 		# 손가락 개수를 세기 위한 원 그리기
 		cImg = np.zeros(mask.shape, np.uint8)
-		cv.circle(cImg, center, int(radius*scale), 255)
+		cv2.circle(cImg, center, int(radius*scale), 255)
 
 		# 원의 외곽선을 저장할 벡터
-		image, circleContours, hierarchy = cv.findContours(cImg, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
+		image, circleContours, hierarchy = cv2.findContours(cImg, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
 		# 원의 외곽선을 따라 돌며 mask의 값이 0에서 1로 바뀌는 지점 확인
 		points = []
@@ -100,34 +101,34 @@ def drawHandGesture(original, mask):
 
 		# 손가락 마디(선) 그리기
 		for i in range(len(points)):
-			cv.line(original, center, points[i], (0, 255, 0), 3)
+			cv2.line(original, center, points[i], (0, 255, 0), 3)
 
 		# 제스처 출력
 		text = getHandGesture(points)
-		cv.putText(original, text, center, font, fontScale, color, thickness)
+		cv2.putText(original, text, center, font, fontScale, color, thickness)
 
 	return original
 
 
-cap = cv.VideoCapture(0)
+cap = cv2.VideoCapture(0)
 while cap.isOpened():
 	ret, frame = cap.read()
 	if ret:
 		# Invert left and right
-		frame = cv.flip(frame, 1)
+		frame = cv2.flip(frame, 1)
 		# Skin detect and Noise reduction
 		mask = detectSkin(frame)
 		# Find out and Draw Hand Gesture
 		detected = drawHandGesture(frame, mask)
 
 		# Show window
-		cv.namedWindow('Live', cv.WINDOW_NORMAL)
-		cv.imshow('Live', detected)
-		k = cv.waitKey(1) & 0xFF
+		cv2.namedWindow('Live', cv2.WINDOW_NORMAL)
+		cv2.imshow('Live', detected)
+		k = cv2.waitKey(1) & 0xFF
 		if k == 27:
 			break
 	else:
 		print('error')
 
 cap.release()
-cv.destroyAllWindows()
+cv2.destroyAllWindows()
