@@ -19,12 +19,6 @@ void setup() {
 
 void loop() { 
 
-  /*
-  u8g.firstPage();
-  do{
-    showBasicOLED();
-  } while( u8g.nextPage() );*/
-
   if (Serial.available() > 0){
     
     signalNum = Serial.parseInt();
