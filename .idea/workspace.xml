@@ -2,7 +2,6 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="c0c86042-9658-440e-bc01-e8d0623c9f94" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/face-mask-detector/camera.py" beforeDir="false" afterPath="$PROJECT_DIR$/face-mask-detector/camera.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -28,8 +27,8 @@
       <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/face-mask-detector/camera.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="317">
-              <caret line="332" lean-forward="true" selection-start-line="332" selection-end-line="332" />
+            <state relative-caret-position="400">
+              <caret line="95" column="13" selection-start-line="95" selection-start-column="13" selection-end-line="95" selection-end-column="13" />
               <folding>
                 <element signature="e#56#127#0" expanded="true" />
               </folding>
@@ -76,8 +75,8 @@
       <find>detect_and_predict_mask</find>
       <find>mask</find>
       <find>frame</find>
-      <find>findContours</find>
       <find>time</find>
+      <find>findContours</find>
     </findStrings>
   </component>
   <component name="Git.Settings">
@@ -297,8 +296,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/face-mask-detector/camera.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="317">
-          <caret line="332" lean-forward="true" selection-start-line="332" selection-end-line="332" />
+        <state relative-caret-position="400">
+          <caret line="95" column="13" selection-start-line="95" selection-start-column="13" selection-end-line="95" selection-end-column="13" />
           <folding>
             <element signature="e#56#127#0" expanded="true" />
           </folding>

@@ -69,7 +69,7 @@ def drawHandGesture(frame, mask):
     color = (0, 255, 255)
     thickness = 1
 
-    contours, hierarchy = cv2.findContours(mask, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
+    im2, contours, hierarchy = cv2.findContours(mask, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
     max_radius = 0
     motion_num = -1
     for cnt in contours:
@@ -93,7 +93,7 @@ def drawHandGesture(frame, mask):
         cv2.circle(cImg, center, int(radius*scale), 255)
 
         # 원의 외곽선을 저장할 벡터
-        circleContours, hierarchy = cv2.findContours(cImg, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        im2, circleContours, hierarchy = cv2.findContours(cImg, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
         # 원의 외곽선을 따라 돌며 mask의 값이 0에서 1로 바뀌는 지점 확인
         points = []
