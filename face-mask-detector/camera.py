@@ -11,7 +11,6 @@ import imutils
 import time
 import cv2
 import os
-import math
 
 
 def region_of_interest(img, vertices, color3=(255, 255, 255), color1=255):  # ROI 셋팅
@@ -42,30 +41,6 @@ def detectSkin(original):
     mask = cv2.morphologyEx(src=mask, op=cv2.MORPH_CLOSE, kernel=element)
     mask = cv2.morphologyEx(src=mask, op=cv2.MORPH_OPEN, kernel=element)
     return mask
-
-
-# 점 a1,a2를 잇는 직선과 점 b1,b2를 잇는 직선 사이의 각 반환
-def getAngle(a1, a2, b1, b2):
-    dx1 = a1[0] - a2[0]
-    dy1 = a1[1] - a2[1]
-    dx2 = b1[0] - b2[0]
-    dy2 = b1[1] - b2[1]
-
-    rad = math.atan2(dy1*dx2 - dx1 * dy2, dx1*dx2 + dy1 * dy2)
-    pi = math.acos(-1)
-    degree = (rad * 180) / pi
-    return abs(degree)
-
-
-# 벡터 안 요소들의 분산을 반환
-def getVariance(v, mean):
-    result = 0
-    size = len(v)
-    for i in range(size):
-        diff = mean - v[i]
-        result += (diff*diff)
-    result /= size
-    return result
 
 
 # 손가락 개수와 손가락 사이 각을 이용한 제스쳐 인식
@@ -106,6 +81,8 @@ def drawHandGesture(frame, mask):
         scale = 0.7
         center = (int(x), int(y))
         radius = int(radius)
+        if radius < 100:
+            continue
         if max_radius < radius:
             max_radius = radius
         # cv2.circle(frame, center, 2, (0, 255, 0), -1)
@@ -234,7 +211,7 @@ motion_loop_end = False
 while True:
     # -------- | 영상 입력 받기 | ------------------------------------------------------
     # grab the frame from the threaded video stream and resize it
-    # to have a maximum width of 400 pixels
+    # to have a maximum width of 1000 pixels
     frame = vs.read()
     frame = imutils.resize(frame, 1000)
     frame = cv2.flip(frame, 1)
@@ -348,7 +325,9 @@ while True:
     if key == ord("q"):
         break
     elif key == ord("r"):
+        mask_loop = False
         mask_loop_end = False
+        motion_loop = False
         motion_loop_end = False
 
 
