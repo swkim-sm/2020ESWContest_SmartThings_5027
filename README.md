@@ -34,6 +34,8 @@
     pip install numpy matplotlib pillow opencv-python
     ```
 
+### 서버 개발 환경 셋팅
+
 ## 테스트 실행하기
 이 시스템을 위한 자동화된 테스트를 실행하는 방법을 적어주세요.
 
