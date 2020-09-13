@@ -13,6 +13,7 @@ import time
 import cv2
 import os
 
+
 # Skin detect and Noise reduction
 def detectSkin(original):
     # Color binarization
@@ -103,6 +104,7 @@ def drawHandGesture(frame, mask, keyboard_x, keyboard_y):
         cv2.putText(frame, text, center, font, fontScale, color, thickness)
 
     return frame, motion_num, max_radius
+
 
 def make_button(x, y, width, height, text):
     th = 3 # thickness
@@ -228,7 +230,6 @@ while True:
 
             label = "Mask" if mask > withoutMask else "No Mask"
             color = (0, 255, 0) if label == "Mask" else (0, 0, 255)
-
 
             if label == "Mask" and not mask_flag: # 마스크 착용 시간 재기
                 mask_flag = True

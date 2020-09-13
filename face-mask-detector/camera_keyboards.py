@@ -27,11 +27,6 @@ def region_of_interest(img, vertices, color3=(255, 255, 255), color1=255):  # RO
     return ROI_image
 
 
-def rof_crop(img, y, ysize, x, xsize):  # ROI 자르기
-    ROI_image = img[y:y+ysize, x:x+xsize]
-    return ROI_image
-
-
 # Skin detect and Noise reduction
 def detectSkin(original):
     # Color binarization
@@ -159,8 +154,7 @@ def detect_and_predict_mask(frame, faceNet, maskNet):
 
             # extract the face ROI, convert it from BGR to RGB channel
             # ordering, resize it to 224x224, and preprocess it
-            # face = frame[startY:endY, startX:endX]
-            face = frame
+            face = frame[startY:endY, startX:endX]
             face = cv2.cvtColor(face, cv2.COLOR_BGR2RGB)
             face = cv2.resize(face, (224, 224))
             face = img_to_array(face)
@@ -212,10 +206,14 @@ vs = VideoStream(src=0).start()
 time.sleep(2.0)
 
 # loop over the frames from the video stream
+# 인식 단계 조정 변수
 mask_loop = False
 mask_loop_end = False
 motion_loop = False
 motion_loop_end = False
+# 단계별 유지 시간 변수
+mask_time = 2
+motion_time = 2
 while True:
     # -------- | 영상 입력 받기 | ------------------------------------------------------
     # grab the frame from the threaded video stream and resize it
@@ -226,14 +224,12 @@ while True:
 
     # -------- | 얼굴-마스크 인식 | ----------------------------------------------------
     if not mask_loop_end:
-        # 얼굴 ROI
+        # ROI
+        frame = cv2.rectangle(frame, (300, 100), (700, 600), (255, 255, 0), 3)
         face_start_x, face_end_x = 300, 700
         face_start_y, face_end_y = 100, 600
         vertices = [[face_start_x, face_start_y], [face_end_x, face_start_y], [face_end_x, face_end_y], [face_start_x, face_end_y]]
         frame_face = region_of_interest(frame, vertices, color3=(255, 255, 255), color1=255)
-        face = rof_crop(frame, 100, 500, 300, 400)
-        cv2.imshow("face", face)
-        frame = cv2.rectangle(frame, (300, 100), (700, 600), (255, 255, 0), 3)
 
         # detect faces in the frame and determine if they are wearing a
         # face mask or not
@@ -246,14 +242,6 @@ while True:
             # unpack the bounding box and predictions
             (startX, startY, endX, endY) = box
             (mask, withoutMask) = pred
-
-            '''
-            # roi crop 이미지 사용시 주석 풀기
-            startX += face_start_x
-            endX += face_start_x
-            startY += face_start_y
-            endY += face_start_y
-            '''
 
             # determine the class label and color we'll use to draw
             # the bounding box and text
@@ -268,6 +256,7 @@ while True:
             # frame
             cv2.putText(frame, label, (startX, startY - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.45, color, 2)
             cv2.rectangle(frame, (startX, startY), (endX, endY), color, 2)
+
         # 시간 구하기
         if mask_flag:
             if not mask_loop:
@@ -276,31 +265,50 @@ while True:
             else:
                 during = time.time() - start
                 cv2.putText(frame, str(during), (startX, startY + 10), cv2.FONT_HERSHEY_SIMPLEX, 0.45, color, 2)
-                if during > 2:
+                if during > mask_time:
                     mask_loop = False
                     mask_loop_end = True
                     print("얼굴 마스크 인식 완료")
         else:
             mask_loop = False
 
-    # -------- | 모션 인식 - 오른손 | ------------------------------------------------
+    # -------- | 모션 인식 - 왼손 & 오른손 | ------------------------------------------------
     if mask_loop_end and not motion_loop_end:
-        # 손 ROI
-        frame = cv2.rectangle(frame, (670, 300), (990, 700), (255, 255, 0), 3)
-        right_start_x, right_end_x = 670, 990
-        right_start_y, right_end_y = 300, 700
-        vertices_right = [[right_start_x, right_start_y], [right_end_x, right_start_y], [right_end_x, right_end_y], [right_start_x, right_end_y]]
-        frame_hand_right = region_of_interest(frame, vertices_right, color3=(255, 255, 255), color1=255)
+        # ROI
+        frame = cv2.rectangle(frame, (10, 300), (330, 700), (255, 255, 0), 3)  # 1번
+        frame = cv2.rectangle(frame, (340, 300), (660, 700), (255, 255, 0), 3)  # 2번
+        frame = cv2.rectangle(frame, (670, 300), (990, 700), (255, 255, 0), 3)  # 3번
+        vertice1 = [[10, 300], [330, 300], [330, 700], [10, 700]]
+        vertice2 = [[340, 300], [660, 300], [660, 700], [340, 700]]
+        vertice3 = [[670, 300], [990, 300], [990, 700], [670, 700]]
+        frame_num1 = region_of_interest(frame, vertice1, color3=(255, 255, 255), color1=255)
+        frame_num2 = region_of_interest(frame, vertice2, color3=(255, 255, 255), color1=255)
+        frame_num3 = region_of_interest(frame, vertice3, color3=(255, 255, 255), color1=255)
+
         # Skin detect and Noise reduction
-        mask_right = detectSkin(frame_hand_right)
+        mask_num1 = detectSkin(frame_num1)
+        mask_num2 = detectSkin(frame_num2)
+        mask_num3 = detectSkin(frame_num3)
         # Find out and Draw Hand Gesture
-        frame, right_result, right_radius = drawHandGesture(frame, mask_right)
-        # motion time
+        frame, motion_num1, radius_num1 = drawHandGesture(frame, mask_num1)
+        frame, motion_num2, radius_num2 = drawHandGesture(frame, mask_num2)
+        frame, motion_num3, radius_num3 = drawHandGesture(frame, mask_num3)
+
+        # 모션인식 결과
         motion_flag = False
         result = -1
-        if right_result in (1, 2, 3):
-            result = right_result
-            motion_flag = True
+        if radius_num1 > 0 and radius_num1 > radius_num2 and radius_num1 > radius_num3:
+            if motion_num1 == 1:
+                result = 1
+                motion_flag = True
+        elif radius_num2 > 0 and radius_num2 > radius_num1 and radius_num2 > radius_num3:
+            if motion_num2 == 1:
+                result = 2
+                motion_flag = True
+        elif radius_num3 > 0 and radius_num3 > radius_num1 and radius_num3 > radius_num2:
+            if motion_num3 == 1:
+                result = 3
+                motion_flag = True
 
         # 시간 구하기
         if motion_flag:
@@ -311,7 +319,7 @@ while True:
             elif motion_num == result:
                 during = time.time() - start
                 cv2.putText(frame, str(during), (500, 500), cv2.FONT_HERSHEY_SIMPLEX, 0.45, color, 2)
-                if during > 2:
+                if during > motion_time:
                     motion_loop = False
                     motion_loop_end = True
                     print("모션인식 완료")
