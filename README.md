@@ -35,12 +35,60 @@
     ```
 
 ### 서버 개발 환경 셋팅
+1. python pip 설치
+    ```bash
+    sudo apt install python3-pip
+    ```
+2. opencv, flask, werkzeug 설치
+    ```bash
+    pip3 install opencv-contrib-python
+    pip3 install flask
+    pip3 install werkzeug
+    ```
+3. 모션인식 등을 위한 라이브러리 설치
+    ```bash
+    (채우기)
+    ```
 
 ## 테스트 실행하기
-이 시스템을 위한 자동화된 테스트를 실행하는 방법을 적어주세요.
+이 시스템을 위한 자동화된 테스트를 실행하는 방법입니다.
+1. 서버
+    ```bash
+    git clone https://github.com/swkim-sm/safe_pass.git
+    cd safe_pass/server/
+    python3 server.py
+    ```
+2. 라즈베리파이
+    ```bash
+    git clone https://github.com/swkim-sm/safe_pass.git
+    cd safe_pass/face_detector/
+    vi python practice.py
+    ```
+    ```
+    # practice.py
+    ...
+    url = "http://[ip]:8080/upload..." # 본인 서버 ip로 수정하기
+    ...
+    ```
+    ```bash
+    python practice.py 
+    ```
+3. 라즈베리파이에 연결된 모니터에서 frame이 잘 나오는지 확인
 
 ## 배포
 추가로 실제 시스템에 배포하는 방법을 노트해 두세요.
+1. 서버
+    ```bash
+    git clone https://github.com/swkim-sm/safe_pass.git
+    cd safe_pass/server/
+    python3 server.py
+    ```
+2. 라즈베리파이
+    ```bash
+    git clone https://github.com/swkim-sm/safe_pass.git
+    cd safe_pass/face_detector/
+    python keyboard.py
+    ```
 
 ## 사용된 도구
 * [Tensorflow](https://www.tensorflow.org/api_docs)

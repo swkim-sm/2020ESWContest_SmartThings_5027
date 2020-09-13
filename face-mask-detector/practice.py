@@ -24,13 +24,14 @@ while True:
     if not cv2.imwrite(filename, frame):
         raise RuntimeError("Unable to capture image")
     files = {'myfile': open(filename, 'rb')}
-    url = "http://52.21.196.66:8080/upload"
+    # url = "http://52.21.196.66:8080/upload"
+    url = "http://192.168.19.145:8080/upload"
     response = req.post(url, files=files)
     result = response.text
     print(result)
 
     # 서버에서 다운로드
-    imgurl = "http://52.21.196.66:8080/static/image.jpg"
+    imgurl = "http://192.168.19.145:8080/static/image.jpg"
     img_data = req.get(imgurl).content
     print(type(img_data))
     print(img_data)
