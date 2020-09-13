@@ -94,3 +94,9 @@
 * [Tensorflow](https://www.tensorflow.org/api_docs)
 * [Raspberry Pi](https://www.raspberrypi.org/documentation/)
 * [Arduino](https://www.arduino.cc/reference/en/)
+
+## 넌컨택트 Team Members
+* Seowon Kim
+* Minji Kim
+* Dong Yeon Park
+* Haram Lee
