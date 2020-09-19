@@ -1,4 +1,5 @@
 # Safe Pass
+![SAFEPASS로고2](https://user-images.githubusercontent.com/67955977/93663208-fb891d80-faa0-11ea-873e-2509d9a8ae99.png)
 ## Team
 * 팀이름 : 넌컨택트(Noncontact)
 * 팀원 : 김민지(Minji Kim), 김서원(Seowon Kim), 박동연(Dongyoen Park), 이하람(Haram Lee)
