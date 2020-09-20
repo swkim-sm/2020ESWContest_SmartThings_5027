@@ -46,9 +46,10 @@
     pip3 install werkzeug
     ```
 3. 모션인식 등을 위한 라이브러리 설치
-    ```bash
-    (채우기)
-    ```
+    * https://github.com/cansik/yolo-hand-detection 접속
+    * https://github.com/cansik/yolo-hand-detection/releases/download/pretrained/cross-hands-tiny.cfg 다운로드
+    * https://github.com/cansik/yolo-hand-detection/releases/download/pretrained/cross-hands-tiny.weights 다운로드
+    * ~/safe_pass/face-mask-detector/models/ 안에 넣기
 
 ## 테스트 실행하기
 이 시스템을 위한 자동화된 테스트를 실행하는 방법입니다.
