@@ -13,8 +13,7 @@ import time
 import cv2
 import os
 from yolo import YOLO
-import pyfirmata
-
+import serial
 
 # from win32api import GetSystemMetrics
 
@@ -196,7 +195,8 @@ prev_btn = -1
 # led, fan, belt button off : 0 / on : 1
 current_status = [0, 0, 0]
 # arduino board
-board = pyfirmata.Arduino('/dev/ttyACM0')
+ser = serial.Serial('/dev/ttyACM0', 9600, timeout=1)
+#ser.open()
 
 # flag for clicking button
 before_area = 0
@@ -307,15 +307,17 @@ while True:
                         prev_btn = btn
                     else:
                         # on 버튼
-                        if (btn == 3):
-                            if (current_status[prev_btn] == 0):
+                        if btn == 3:
+                            if current_status[prev_btn] == 0:
                                 current_status[prev_btn] = 1
                                 print(prev_btn * 2 + 1)
+                                ser.writelines(str(prev_btn * 2 + 1))
                         # off 버튼
                         else:
-                            if (current_status[prev_btn] == 1):
+                            if current_status[prev_btn] == 1:
                                 current_status[prev_btn] = 0
                                 print(prev_btn * 2 + 2)
+                                ser.writelines(str(prev_btn * 2 + 2))
 
         before_area = area
         click_flag = False
