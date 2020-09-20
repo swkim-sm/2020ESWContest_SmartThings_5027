@@ -315,6 +315,7 @@ while True:
                                 text = str(prev_btn * 2 + 1)
                                 text = bytes(text, 'utf-8')
                                 ser.write(text)
+                                wearing_mask = False
                         # off 버튼
                         else:
                             if current_status[prev_btn] == 1:
@@ -323,6 +324,7 @@ while True:
                                 text = str(prev_btn * 2 + 2)
                                 text = bytes(text, 'utf-8')
                                 ser.write(text)
+                                wearing_mask = False
 
         before_area = area
         click_flag = False
@@ -337,6 +339,7 @@ while True:
         motion_end = False
         mask_flag = False
         current_status = [0, 0, 0]
+        prev_btn = -1
 
 # do a bit of cleanup
 cv2.destroyAllWindows()
