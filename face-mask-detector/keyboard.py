@@ -195,8 +195,9 @@ prev_btn = -1
 # led, fan, belt button off : 0 / on : 1
 current_status = [0, 0, 0]
 # arduino board
-ser = serial.Serial('/dev/ttyACM0', 9600, timeout=1)
-#ser.open()
+#ser = serial.Serial('/dev/ttyACM0', 9600, timeout=1)
+ser = serial.Serial('COM4', 115200, timeout=1)
+# ser.open()
 
 # flag for clicking button
 before_area = 0
@@ -311,13 +312,17 @@ while True:
                             if current_status[prev_btn] == 0:
                                 current_status[prev_btn] = 1
                                 print(prev_btn * 2 + 1)
-                                ser.writelines(str(prev_btn * 2 + 1))
+                                text = str(prev_btn * 2 + 1)
+                                text = bytes(text, 'utf-8')
+                                ser.write(text)
                         # off 버튼
                         else:
                             if current_status[prev_btn] == 1:
                                 current_status[prev_btn] = 0
                                 print(prev_btn * 2 + 2)
-                                ser.writelines(str(prev_btn * 2 + 2))
+                                text = str(prev_btn * 2 + 2)
+                                text = bytes(text, 'utf-8')
+                                ser.write(text)
 
         before_area = area
         click_flag = False
@@ -331,6 +336,7 @@ while True:
         wearing_mask = False
         motion_end = False
         mask_flag = False
+        current_status = [0, 0, 0]
 
 # do a bit of cleanup
 cv2.destroyAllWindows()
