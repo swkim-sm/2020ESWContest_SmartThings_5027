@@ -15,12 +15,12 @@ import os
 from yolo import YOLO
 import serial
 
-# from win32api import GetSystemMetrics
+from win32api import GetSystemMetrics
 
 
 # 손의 중심 포인트가 버튼 ROI에 포함되는지 확인하는 함수
 def check_ROI(point, btn_roi):
-    if point[0] + 360 >= btn_roi[0] and point[0] + 360 <= btn_roi[2]:
+    if point[0] + system_width*3/5 >= btn_roi[0] and point[0] + system_width*3/5 <= btn_roi[2]:
         X_CORRECT = True
     else:
         X_CORRECT = False
@@ -37,12 +37,12 @@ def check_ROI(point, btn_roi):
 
 
 # 버튼 rectangle 생성하는 함수 - clicked 여부에 따라 분류
-def make_button(x, y, width, height, text, clicked):
+def make_button(x, y, width, height, color, text, clicked):
     th = 3  # thickness
     if clicked:
-        cv2.rectangle(frame, (x + th, y + th), (x + width - th, y + height - th), (0, 255, 255), -1)
+        cv2.rectangle(frame, (x + th, y + th), (x + width - th, y + height - th), (0, 0, 255), -1)
     else:
-        cv2.rectangle(frame, (x + th, y + th), (x + width - th, y + height - th), (255, 0, 0), th)
+        cv2.rectangle(frame, (x + th, y + th), (x + width - th, y + height - th), color, th)
 
     # Text settings
     font_letter = cv2.FONT_HERSHEY_PLAIN
@@ -52,7 +52,7 @@ def make_button(x, y, width, height, text, clicked):
     width_text, height_text = text_size[0], text_size[1]
     text_x = int((width - width_text) / 2) + x
     text_y = int((height + height_text) / 2) + y
-    cv2.putText(frame, text, (text_x, text_y), font_letter, font_scale, (255, 0, 0), font_th)
+    cv2.putText(frame, text, (text_x, text_y), font_letter, font_scale, color, font_th)
 
     return x, y, x + width, y + height, text
 
@@ -75,11 +75,11 @@ def hand_detection(keyboard_roi, results):
         area = w * h
         # draw a bounding box rectangle and label on the image
         color = (0, 255, 255)
-        cv2.rectangle(keyboard_roi, (x, y), (x + w, y + h), color, 2)
+        #cv2.rectangle(keyboard_roi, (x, y), (x + w, y + h), color, 2)
         center = (int((x + x + w) / 2), int((y + y + h) / 2))  # Detection 중심 계산
         cv2.circle(keyboard_roi, center, 3, (0, 0, 255), -1)  # Detection 중심 포인트 표시
         text = "%s (%s)" % (name, round(confidence, 2))
-        cv2.putText(keyboard_roi, text, (x, y - 5), cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
+        #cv2.putText(keyboard_roi, text, (x, y - 5), cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
 
     return center, area
 
@@ -192,25 +192,37 @@ wearing_mask = False
 motion_end = False
 mask_flag = False
 prev_btn = -1
+
+# logo image
+logo_img = cv2.imread("logo.png")
+# I want to put logo on top-left corner, So I create a ROI
+rows, cols, channels = logo_img.shape
+# Now create a mask of logo and create its inverse mask also
+img2gray = cv2.cvtColor(logo_img, cv2.COLOR_BGR2GRAY)
+ret, logo_mask = cv2.threshold(img2gray, 10, 255, cv2.THRESH_BINARY)
+mask_inv = cv2.bitwise_not(logo_mask)
+
 # led, fan, belt button off : 0 / on : 1
 current_status = [0, 0, 0]
 # arduino board
 #ser = serial.Serial('/dev/ttyACM0', 9600, timeout=1)
-ser = serial.Serial('COM4', 115200, timeout=1)
+# ser = serial.Serial('COM4', 115200, timeout=1)
 # ser.open()
 
 # flag for clicking button
 before_area = 0
 click_check_ratio = 1.4
 
-# system_width = GetSystemMetrics(0)
-# system_height = GetSystemMetrics(1)
-# print("Width =", system_width)
-# print("Height =", system_height)
+system_width = GetSystemMetrics(0)
+system_height = GetSystemMetrics(1)
+keyboard_x = int(system_width*3/5)
+keyboard_y = 0
+print("Width =", system_width)
+print("Height =", system_height)
 
 while True:
     frame = vs.read()
-    frame = imutils.resize(frame, width=720, height=480)
+    frame = imutils.resize(frame, width=int(system_width), height=int(system_height))
     frame = cv2.flip(frame, 1)
     # mask 미착용 또는 확인 단계
     if not wearing_mask:
@@ -243,57 +255,53 @@ while True:
     # mask 착용 확인 후 virtual keyboard 조작 단계
     else:
         # keyboard 생성
-        keyboard_x = 360
-        keyboard_y = 0
-        keyboard_roi = frame[0:480, 300:720]
+        keyboard_roi = frame[0:int(system_height), keyboard_x:int(system_width)]
 
         click_flag = False
         width, height, inference_time, results = yolo.inference(keyboard_roi)
         center, area = hand_detection(keyboard_roi, results)
         btn_list = []
-        '''btn_all = make_button(keyboard_x, keyboard_y-180, 400, 180, "All", False)
-        btn_A = make_button(keyboard_x, keyboard_y, 200, 180, "A", False)
-        btn_B = make_button(keyboard_x+200, keyboard_y, 200, 180, "B", False)
-        btn_C = make_button(keyboard_x, keyboard_y+180, 200, 180, "C", False)
-        btn_D = make_button(keyboard_x+200, keyboard_y+180, 200, 180, "D", False)
-        btn_left = make_button(keyboard_x, keyboard_y+360, 145, 180, "<", False)
-        btn_stop = make_button(keyboard_x+145, keyboard_y+360, 110, 180, "-", False)
-        btn_right = make_button(keyboard_x+255, keyboard_y+360, 145, 180, ">", False)
 
-        btn_list.append(btn_all)
-        btn_list.append(btn_A)
-        btn_list.append(btn_B)
-        btn_list.append(btn_C)
-        btn_list.append(btn_D)
-        btn_list.append(btn_left)
-        btn_list.append(btn_stop)
-        btn_list.append(btn_right)'''
-
-        btn_ON = make_button(keyboard_x + 190, keyboard_y + 100, 160, 100, "ON", False)
-        btn_OFF = make_button(keyboard_x + 190, keyboard_y + 280, 160, 100, "OFF", False)
+        # cv2.putText(frame, "Please select a device to operate", (100, 100), cv2.FONT_HERSHEY_SIMPLEX, 2.5, (255, 255, 255), 2)
+        color_white = (255, 255, 255)
+        color_gray = (200, 200, 200, 50)
 
         if prev_btn == 0:
-            btn_LED = make_button(keyboard_x + 10, keyboard_y + 80, 160, 100, "LED", True)
-            btn_FAN = make_button(keyboard_x + 10, keyboard_y + 200, 160, 100, "FAN", False)
-            btn_BELT = make_button(keyboard_x + 10, keyboard_y + 320, 160, 100, "BELT", False)
+            btn_LED = make_button(keyboard_x + 50, keyboard_y + 200, 200, 150, color_white, "LED", True)
+            btn_FAN = make_button(keyboard_x + 50, keyboard_y + 400, 200, 150, color_gray, "FAN", False)
+            btn_BELT = make_button(keyboard_x + 50, keyboard_y + 600, 200, 150, color_gray, "BELT", False)
+            btn_ON = make_button(keyboard_x + 300, keyboard_y + 200, 200, 150,  color_white,"ON", False)
+            btn_OFF = make_button(keyboard_x + 300, keyboard_y + 400, 200, 150,  color_white,"OFF", False)
+            btn_END = make_button(keyboard_x + 300, keyboard_y + 600, 200, 150,  color_white,"END", False)
         elif prev_btn == 1:
-            btn_LED = make_button(keyboard_x + 10, keyboard_y + 80, 160, 100, "LED", False)
-            btn_FAN = make_button(keyboard_x + 10, keyboard_y + 200, 160, 100, "FAN", True)
-            btn_BELT = make_button(keyboard_x + 10, keyboard_y + 320, 160, 100, "BELT", False)
+            btn_LED = make_button(keyboard_x + 50, keyboard_y + 200, 200, 150, color_gray,"LED", False)
+            btn_FAN = make_button(keyboard_x + 50, keyboard_y + 400, 200, 150, color_white,"FAN", True)
+            btn_BELT = make_button(keyboard_x + 50, keyboard_y + 600, 200, 150, color_gray,"BELT", False)
+            btn_ON = make_button(keyboard_x + 300, keyboard_y + 200, 200, 150,  color_white,"ON", False)
+            btn_OFF = make_button(keyboard_x + 300, keyboard_y + 400, 200, 150,  color_white,"OFF", False)
+            btn_END = make_button(keyboard_x + 300, keyboard_y + 600, 200, 150,  color_white,"END", False)
         elif prev_btn == 2:
-            btn_LED = make_button(keyboard_x + 10, keyboard_y + 80, 160, 100, "LED", False)
-            btn_FAN = make_button(keyboard_x + 10, keyboard_y + 200, 160, 100, "FAN", False)
-            btn_BELT = make_button(keyboard_x + 10, keyboard_y + 320, 160, 100, "BELT", True)
+            btn_LED = make_button(keyboard_x + 50, keyboard_y + 200, 200, 150, color_gray,"LED", False)
+            btn_FAN = make_button(keyboard_x + 50, keyboard_y + 400, 200, 150, color_gray,"FAN", False)
+            btn_BELT = make_button(keyboard_x + 50, keyboard_y + 600, 200, 150, color_white,"BELT", True)
+            btn_ON = make_button(keyboard_x + 300, keyboard_y + 200, 200, 150,  color_white, "ON", False)
+            btn_OFF = make_button(keyboard_x + 300, keyboard_y + 400, 200, 150,  color_white, "OFF", False)
+            btn_END = make_button(keyboard_x + 300, keyboard_y + 600, 200, 150,  color_white, "END", False)
         else:
-            btn_LED = make_button(keyboard_x + 10, keyboard_y + 80, 160, 100, "LED", False)
-            btn_FAN = make_button(keyboard_x + 10, keyboard_y + 200, 160, 100, "FAN", False)
-            btn_BELT = make_button(keyboard_x + 10, keyboard_y + 320, 160, 100, "BELT", False)
+            btn_LED = make_button(keyboard_x + 50, keyboard_y + 200, 200, 150, color_white, "LED", False)
+            btn_FAN = make_button(keyboard_x + 50, keyboard_y + 400, 200, 150, color_white, "FAN", False)
+            btn_BELT = make_button(keyboard_x + 50, keyboard_y + 600, 200, 150, color_white, "BELT", False)
+            btn_ON = make_button(keyboard_x + 300, keyboard_y + 200, 200, 150, color_gray, "ON", False)
+            btn_OFF = make_button(keyboard_x + 300, keyboard_y + 400, 200, 150, color_gray, "OFF", False)
+            btn_END = make_button(keyboard_x + 300, keyboard_y + 600, 200, 150, color_white, "END", False)
 
         btn_list.append(btn_LED)
         btn_list.append(btn_FAN)
         btn_list.append(btn_BELT)
         btn_list.append(btn_ON)
         btn_list.append(btn_OFF)
+        btn_list.append(btn_END)
+
 
         # 손 면적 여부를 통한 클릭 여부 확인
         if (area >= int(before_area * click_check_ratio)):  # 클릭 후 손 펴는 동작으로 면적이 커졌을 시
@@ -303,9 +311,11 @@ while True:
             for btn in range(0, len(btn_list)):
                 if check_ROI(center, btn_list[btn]):
                     make_button(btn_list[btn][0], btn_list[btn][1], btn_list[btn][2] - btn_list[btn][0],
-                                btn_list[btn][3] - btn_list[btn][1], btn_list[btn][4], True)
+                                btn_list[btn][3] - btn_list[btn][1], color_white, btn_list[btn][4], True)
                     if (btn in (0, 1, 2)):
                         prev_btn = btn
+                    elif btn == 5:
+                        wearing_mask = False
                     else:
                         # on 버튼
                         if btn == 3:
@@ -314,8 +324,8 @@ while True:
                                 print(prev_btn * 2 + 1)
                                 text = str(prev_btn * 2 + 1)
                                 text = bytes(text, 'utf-8')
-                                ser.write(text)
-                                wearing_mask = False
+                                # ser.write(text)
+
                         # off 버튼
                         else:
                             if current_status[prev_btn] == 1:
@@ -323,11 +333,20 @@ while True:
                                 print(prev_btn * 2 + 2)
                                 text = str(prev_btn * 2 + 2)
                                 text = bytes(text, 'utf-8')
-                                ser.write(text)
-                                wearing_mask = False
+                                # ser.write(text)
 
         before_area = area
         click_flag = False
+
+    # logo
+    roi = frame[50:rows + 50, keyboard_x-10:cols + keyboard_x-10]
+    # Now black-out the area of logo in ROI
+    img1_bg = cv2.bitwise_and(roi, roi, mask=mask_inv)
+    # Take only region of logo from logo image.
+    img2_fg = cv2.bitwise_and(logo_img, logo_img, mask=logo_mask)
+    # Put logo in ROI and modify the main image
+    dst = cv2.add(img1_bg, img2_fg)
+    frame[50:rows + 50, keyboard_x-10:cols + keyboard_x-10] = dst
 
     # show the output frame and break the loop by button 'q'
     cv2.imshow("Frame", frame)
