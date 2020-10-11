@@ -11,7 +11,7 @@
 * [시연동영상](https://youtu.be/1E9v1babfgc)
 
 ## System architecture
-![시스템 아키텍쳐](https://user-images.githubusercontent.com/35680202/95684378-47585e00-0c2c-11eb-9444-0d6626f090c2.png)
+![시스템 아키텍쳐](https://user-images.githubusercontent.com/35680202/95685321-124f0a00-0c32-11eb-9a1d-73aad9a72706.png)
 
 ## How To Use SafePass?
 > Virtual Keyboard : 원하는 버튼 위에서 주먹을 쥐었다 펴면 클릭 이벤트가 발생합니다.
