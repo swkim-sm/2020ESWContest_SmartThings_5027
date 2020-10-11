@@ -8,6 +8,7 @@
 * 목표
     * 근무자의 안전 보호구 착용 여부 확인 및 착용 독려
     * 근무자와 작업 환경 간의 접촉 최소화를 위한 모션 인식 제어
+* 시연동영상 https://youtu.be/1E9v1babfgc
 
 ## System architecture
 ![시스템 아키텍쳐](https://user-images.githubusercontent.com/35680202/95684378-47585e00-0c2c-11eb-9444-0d6626f090c2.png)
