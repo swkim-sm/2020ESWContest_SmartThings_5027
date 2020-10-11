@@ -1,5 +1,4 @@
 ![KakaoTalk_20200927_135048782](https://user-images.githubusercontent.com/67955977/95685027-550fe280-0c30-11eb-9c4b-4ee9dee266fa.png)
-
 ## Team
 * 팀이름 : 넌컨택트(Noncontact)
 * 팀원 : 김민지(Minji Kim), 김서원(Seowon Kim), 박동연(Dongyoen Park), 이하람(Haram Lee)
