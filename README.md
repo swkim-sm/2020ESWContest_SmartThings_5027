@@ -9,7 +9,20 @@
     * 근무자의 안전 보호구 착용 여부 확인 및 착용 독려
     * 근무자와 작업 환경 간의 접촉 최소화를 위한 모션 인식 제어
 
-## 설치하기
+## System architecture
+![시스템 아키텍쳐](https://user-images.githubusercontent.com/35680202/95684378-47585e00-0c2c-11eb-9444-0d6626f090c2.png)
+
+## How To Use SafePass?
+> Virtual Keyboard : 원하는 버튼 위에서 주먹을 쥐었다 펴면 클릭 이벤트가 발생합니다.
+
+![Virtual Keyboard](https://user-images.githubusercontent.com/35680202/95684763-a1f2b980-0c2e-11eb-9c87-64330c50d676.gif)
+
+> 위와 같이 **FAN**과 **ON**을 선택하면 액츄에이터에 의해 스위치가 눌려서 작동됩니다.
+
+![FAN](https://user-images.githubusercontent.com/35680202/95684625-e16cd600-0c2d-11eb-905f-e3461ed7265a.png)
+
+
+## Prerequisite
 ### 라즈베리파이 개발 환경 셋팅
 1. 아나콘다 프롬프트 or CMD 실행
 2. (pip 패키지 업그레이드)
@@ -32,66 +45,17 @@
 6. 라이브러리 설치
     ```bash
     pip install numpy matplotlib pillow opencv-python
+    pip install opencv-contrib-python
+    pip install flask
+    pip install werkzeug
     ```
-
-### 서버 개발 환경 셋팅
-1. python pip 설치
-    ```bash
-    sudo apt install python3-pip
-    ```
-2. opencv, flask, werkzeug 설치
-    ```bash
-    pip3 install opencv-contrib-python
-    pip3 install flask
-    pip3 install werkzeug
-    ```
-3. 모션인식 등을 위한 라이브러리 설치
+7. 모션인식 모델 다운로드
     * https://github.com/cansik/yolo-hand-detection 접속
     * https://github.com/cansik/yolo-hand-detection/releases/download/pretrained/cross-hands-tiny.cfg 다운로드
     * https://github.com/cansik/yolo-hand-detection/releases/download/pretrained/cross-hands-tiny.weights 다운로드
-    * ~/safe_pass/face-mask-detector/models/ 안에 넣기
+    * ~/safe_pass/safe_pass/models/ 안에 넣기
 
-## 테스트 실행하기
-이 시스템을 위한 자동화된 테스트를 실행하는 방법입니다.
-1. 서버
-    ```bash
-    git clone https://github.com/swkim-sm/safe_pass.git
-    cd safe_pass/server/
-    python3 server.py
-    ```
-2. 라즈베리파이
-    ```bash
-    git clone https://github.com/swkim-sm/safe_pass.git
-    cd safe_pass/face_detector/
-    vi python practice.py
-    ```
-    ```
-    # practice.py
-    ...
-    url = "http://[ip]:8080/upload..." # 본인 서버 ip로 수정하기
-    ...
-    ```
-    ```bash
-    python practice.py 
-    ```
-3. 라즈베리파이에 연결된 모니터에서 frame이 잘 나오는지 확인
-
-## 배포
-추가로 실제 시스템에 배포하는 방법을 노트해 두세요.
-1. 서버
-    ```bash
-    git clone https://github.com/swkim-sm/safe_pass.git
-    cd safe_pass/server/
-    python3 server.py
-    ```
-2. 라즈베리파이
-    ```bash
-    git clone https://github.com/swkim-sm/safe_pass.git
-    cd safe_pass/face_detector/
-    python keyboard.py
-    ```
-
-## 사용된 도구
+### 사용된 도구
 * [Tensorflow](https://www.tensorflow.org/api_docs)
 * [Raspberry Pi](https://www.raspberrypi.org/documentation/)
 * [Arduino](https://www.arduino.cc/reference/en/)
