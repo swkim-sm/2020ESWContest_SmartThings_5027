@@ -15,15 +15,24 @@ from yolo import YOLO
 from win32api import GetSystemMetrics
 system_width = GetSystemMetrics(0)
 system_height = GetSystemMetrics(1)
-def hand_detection(keyboard_roi, results, args):
+w_h_ratio = system_height/system_width
+
+system_width_ = int(system_width/3)
+system_height_ = int(system_width_*w_h_ratio)
+
+def hand_detection(keyboard_roi_, keyboard_roi, results, args):
     center = (0, 0)
     area = 0
     for detection in results:
         id, name, confidence, x, y, w, h = detection
-        area = w * h
+        x = x*3
+        y = y*3
+        w = w*3
+        h = h*3
+        area = w * h 
         # draw a bounding box rectangle and label on the image
         color = (0, 255, 255)
-        #cv2.rectangle(keyboard_roi, (x, y), (x + w, y + h), color, 2)
+        # cv2.rectangle(keyboard_roi, (x, y), (x + w, y + h), color, 2)
         center = (int((x + x + w) / 2), int((y + y + h) / 2))  # Detection 중심 계산
         cv2.circle(keyboard_roi, center, 3, (0, 0, 255), -1)  # Detection 중심 포인트 표시
         text = "%s (%s)" % (name, round(confidence, 2))
