@@ -10,9 +10,7 @@ import time
 import cv2
 import os
 from yolo import YOLO
-#import serial
-
-from win32api import GetSystemMetrics
+import serial
 
 from face_detection import *
 from buttonUI import *
@@ -76,9 +74,12 @@ mask_inv = cv2.bitwise_not(logo_mask)
 
 # led, fan, belt button off : 0 / on : 1
 current_status = [0, 0, 0]
+
 # arduino board
+arduino = True
 #ser = serial.Serial('/dev/ttyACM0', 9600, timeout=1)
-# ser = serial.Serial('COM4', 115200, timeout=1)
+if arduino:
+    ser = serial.Serial('COM6', 115200, timeout=1)
 # ser.open()
 
 # flag for clicking button
@@ -87,16 +88,29 @@ click_check_ratio = 1.4
 
 system_width = GetSystemMetrics(0)
 system_height = GetSystemMetrics(1)
+
+w_h_ratio = system_height/system_width
+
+system_width_ = int(system_width/3)
+system_height_ = int(system_width_*w_h_ratio)
+
 keyboard_x = int(system_width*3/5)
 keyboard_y = 0
 
+keyboard_x_ = int(system_width_*3/5)
+keyboard_y_ = 0
+
+hand_count = 0
+
 while True:
     frame = vs.read()
-    frame = imutils.resize(frame, width=int(system_width), height=int(system_height))
+    frame = cv2.resize(frame, dsize=(int(system_width), int(system_height)), interpolation=cv2.INTER_LINEAR)
+    frame_ = cv2.resize(frame, dsize=(system_width_, system_height_), interpolation=cv2.INTER_AREA)
     frame = cv2.flip(frame, 1)
+    frame_ = cv2.flip(frame_, 1)
     # mask 미착용 또는 확인 단계
     if not wearing_mask:
-        (locs, preds) = detect_and_predict_mask(frame, faceNet, maskNet, args)
+        (locs, preds) = detect_and_predict_mask(frame_, faceNet, maskNet, args)
 
         for (box, pred) in zip(locs, preds):
             (startX, startY, endX, endY) = box
@@ -115,55 +129,64 @@ while True:
                     wearing_mask = True
                     mask_flag = False
             else:  # 마스크 미착용 시 경고 문구
-                cv2.putText(frame, "Please wear a MASK!!!", (10, 80), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 1)
+                cv2.putText(frame, "Please wear a MASK!!!", (10, 80), cv2.FONT_HERSHEY_SIMPLEX, 2.5, (0, 0, 255), 2)
                 mask_flag = False
 
             label = "{}: {:.2f}%".format(label, max(mask, withoutMask) * 100)
-            cv2.putText(frame, label, (startX, startY - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.45, color, 1)
-            cv2.rectangle(frame, (startX, startY), (endX, endY), color, 2)
+            cv2.putText(frame, label, (startX*3, startY*3 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.45, color, 1)
+            cv2.rectangle(frame, (startX*3, startY*3), (endX*3, endY*3), color, 2)
 
     # mask 착용 확인 후 virtual keyboard 조작 단계
     else:
         # keyboard 생성
         keyboard_roi = frame[0:int(system_height), keyboard_x:int(system_width)]
+        keyboard_roi_ = frame_[0:int(system_height/3), keyboard_x_:int(system_width/3)]
+
 
         click_flag = False
-        width, height, inference_time, results = yolo.inference(keyboard_roi)
-        center, area = hand_detection(keyboard_roi, results, args)
+
+        width, height, inference_time, results = yolo.inference(keyboard_roi_)
+        center, area = hand_detection(keyboard_roi_, keyboard_roi, results, args)
+
         btn_list = []
 
         # cv2.putText(frame, "Please select a device to operate", (100, 100), cv2.FONT_HERSHEY_SIMPLEX, 2.5, (255, 255, 255), 2)
         color_white = (255, 255, 255)
         color_gray = (200, 200, 200, 50)
 
+        keyboard_unit = int((system_width - keyboard_x)/11)
+        keyboard_unit_y = int(system_height/17)
+        keyboard_width = keyboard_unit*4
+        keyboard_height = keyboard_unit_y*3
+
         if prev_btn == 0:
-            btn_LED = make_button(frame, keyboard_x + 50, keyboard_y + 200, 200, 150, color_white, "LED", True)
-            btn_FAN = make_button(frame,keyboard_x + 50, keyboard_y + 400, 200, 150, color_gray, "FAN", False)
-            btn_BELT = make_button(frame,keyboard_x + 50, keyboard_y + 600, 200, 150, color_gray, "BELT", False)
-            btn_ON = make_button(frame,keyboard_x + 300, keyboard_y + 200, 200, 150,  color_white,"ON", False)
-            btn_OFF = make_button(frame,keyboard_x + 300, keyboard_y + 400, 200, 150,  color_white,"OFF", False)
-            btn_END = make_button(frame,keyboard_x + 300, keyboard_y + 600, 200, 150,  color_white,"END", False)
+            btn_LED = make_button(frame, keyboard_x + keyboard_unit, keyboard_unit_y*3, keyboard_width, keyboard_height, color_white, "LED", True)
+            btn_FAN = make_button(frame,keyboard_x + keyboard_unit, keyboard_unit_y*7, keyboard_width, keyboard_height, color_gray, "FAN", False)
+            btn_BELT = make_button(frame,keyboard_x + keyboard_unit, keyboard_unit_y*11, keyboard_width, keyboard_height, color_gray, "BELT", False)
+            btn_ON = make_button(frame,keyboard_x + keyboard_unit*2 + keyboard_width, keyboard_unit_y*3, keyboard_width, keyboard_height,  color_white,"ON", False)
+            btn_OFF = make_button(frame,keyboard_x + keyboard_unit*2 + keyboard_width, keyboard_unit_y*7, keyboard_width, keyboard_height,  color_white,"OFF", False)
+            btn_END = make_button(frame,keyboard_x + keyboard_unit*2 + keyboard_width, keyboard_unit_y*11, keyboard_width, keyboard_height,  color_white,"END", False)
         elif prev_btn == 1:
-            btn_LED = make_button(frame,keyboard_x + 50, keyboard_y + 200, 200, 150, color_gray,"LED", False)
-            btn_FAN = make_button(frame,keyboard_x + 50, keyboard_y + 400, 200, 150, color_white,"FAN", True)
-            btn_BELT = make_button(frame,keyboard_x + 50, keyboard_y + 600, 200, 150, color_gray,"BELT", False)
-            btn_ON = make_button(frame,keyboard_x + 300, keyboard_y + 200, 200, 150,  color_white,"ON", False)
-            btn_OFF = make_button(frame,keyboard_x + 300, keyboard_y + 400, 200, 150,  color_white,"OFF", False)
-            btn_END = make_button(frame,keyboard_x + 300, keyboard_y + 600, 200, 150,  color_white,"END", False)
+            btn_LED = make_button(frame,keyboard_x + keyboard_unit, keyboard_unit_y*3, keyboard_width, keyboard_height, color_gray,"LED", False)
+            btn_FAN = make_button(frame,keyboard_x + keyboard_unit, keyboard_unit_y*7, keyboard_width, keyboard_height, color_white,"FAN", True)
+            btn_BELT = make_button(frame,keyboard_x + keyboard_unit, keyboard_unit_y*11, keyboard_width, keyboard_height, color_gray,"BELT", False)
+            btn_ON = make_button(frame,keyboard_x + keyboard_unit*2 + keyboard_width, keyboard_unit_y*3, keyboard_width, keyboard_height,  color_white,"ON", False)
+            btn_OFF = make_button(frame,keyboard_x + keyboard_unit*2 + keyboard_width, keyboard_unit_y*7, keyboard_width, keyboard_height,  color_white,"OFF", False)
+            btn_END = make_button(frame,keyboard_x + keyboard_unit*2 + keyboard_width, keyboard_unit_y*11, keyboard_width, keyboard_height,  color_white,"END", False)
         elif prev_btn == 2:
-            btn_LED = make_button(frame,keyboard_x + 50, keyboard_y + 200, 200, 150, color_gray,"LED", False)
-            btn_FAN = make_button(frame,keyboard_x + 50, keyboard_y + 400, 200, 150, color_gray,"FAN", False)
-            btn_BELT = make_button(frame,keyboard_x + 50, keyboard_y + 600, 200, 150, color_white,"BELT", True)
-            btn_ON = make_button(frame,keyboard_x + 300, keyboard_y + 200, 200, 150,  color_white, "ON", False)
-            btn_OFF = make_button(frame,keyboard_x + 300, keyboard_y + 400, 200, 150,  color_white, "OFF", False)
-            btn_END = make_button(frame,keyboard_x + 300, keyboard_y + 600, 200, 150,  color_white, "END", False)
+            btn_LED = make_button(frame,keyboard_x + keyboard_unit, keyboard_unit_y*3, keyboard_width, keyboard_height, color_gray,"LED", False)
+            btn_FAN = make_button(frame,keyboard_x + keyboard_unit, keyboard_unit_y*7, keyboard_width, keyboard_height, color_gray,"FAN", False)
+            btn_BELT = make_button(frame,keyboard_x + keyboard_unit, keyboard_unit_y*11, keyboard_width, keyboard_height, color_white,"BELT", True)
+            btn_ON = make_button(frame,keyboard_x + keyboard_unit*2 + keyboard_width, keyboard_unit_y*3, keyboard_width, keyboard_height,  color_white, "ON", False)
+            btn_OFF = make_button(frame,keyboard_x + keyboard_unit*2 + keyboard_width, keyboard_unit_y*7, keyboard_width, keyboard_height,  color_white, "OFF", False)
+            btn_END = make_button(frame,keyboard_x + keyboard_unit*2 + keyboard_width, keyboard_unit_y*11, keyboard_width, keyboard_height,  color_white, "END", False)
         else:
-            btn_LED = make_button(frame,keyboard_x + 50, keyboard_y + 200, 200, 150, color_white, "LED", False)
-            btn_FAN = make_button(frame,keyboard_x + 50, keyboard_y + 400, 200, 150, color_white, "FAN", False)
-            btn_BELT = make_button(frame,keyboard_x + 50, keyboard_y + 600, 200, 150, color_white, "BELT", False)
-            btn_ON = make_button(frame,keyboard_x + 300, keyboard_y + 200, 200, 150, color_gray, "ON", False)
-            btn_OFF = make_button(frame,keyboard_x + 300, keyboard_y + 400, 200, 150, color_gray, "OFF", False)
-            btn_END = make_button(frame,keyboard_x + 300, keyboard_y + 600, 200, 150, color_white, "END", False)
+            btn_LED = make_button(frame,keyboard_x + keyboard_unit, keyboard_unit_y*3, keyboard_width, keyboard_height, color_white, "LED", False)
+            btn_FAN = make_button(frame,keyboard_x + keyboard_unit, keyboard_unit_y*7, keyboard_width, keyboard_height, color_white, "FAN", False)
+            btn_BELT = make_button(frame,keyboard_x + keyboard_unit, keyboard_unit_y*11, keyboard_width, keyboard_height, color_white, "BELT", False)
+            btn_ON = make_button(frame,keyboard_x + keyboard_unit*2 + keyboard_width, keyboard_unit_y*3, keyboard_width, keyboard_height, color_gray, "ON", False)
+            btn_OFF = make_button(frame,keyboard_x + keyboard_unit*2 + keyboard_width, keyboard_unit_y*7, keyboard_width, keyboard_height, color_gray, "OFF", False)
+            btn_END = make_button(frame,keyboard_x + keyboard_unit*2 + keyboard_width, keyboard_unit_y*11, keyboard_width, keyboard_height, color_white, "END", False)
 
         btn_list.append(btn_LED)
         btn_list.append(btn_FAN)
@@ -192,34 +215,40 @@ while True:
                             if current_status[prev_btn] == 0:
                                 current_status[prev_btn] = 1
                                 print(prev_btn * 2 + 1)
-                                text = str(prev_btn * 2 + 1)
-                                text = bytes(text, 'utf-8')
-                                # ser.write(text)
+                                if arduino:
+                                    text = str(prev_btn * 2 + 1)
+                                    text = bytes(text, 'utf-8')
+                                    ser.write(text)
 
                         # off 버튼
                         else:
                             if current_status[prev_btn] == 1:
                                 current_status[prev_btn] = 0
                                 print(prev_btn * 2 + 2)
-                                text = str(prev_btn * 2 + 2)
-                                text = bytes(text, 'utf-8')
-                                # ser.write(text)
+                                if arduino:
+                                    text = str(prev_btn * 2 + 2)
+                                    text = bytes(text, 'utf-8')
+                                    ser.write(text)
+
 
         before_area = area
         click_flag = False
 
     # logo
-    roi = frame[50:rows + 50, keyboard_x-10:cols + keyboard_x-10]
+    #keyboard_unit = int((system_width - keyboard_x)/11)
+    #roi = frame[keyboard_unit:rows + keyboard_unit, keyboard_x-int(keyboard_unit/5):cols + keyboard_x-int(keyboard_unit/5)]
     # Now black-out the area of logo in ROI
-    img1_bg = cv2.bitwise_and(roi, roi, mask=mask_inv)
+    #img1_bg = cv2.bitwise_and(roi, roi, mask=mask_inv)
     # Take only region of logo from logo image.
-    img2_fg = cv2.bitwise_and(logo_img, logo_img, mask=logo_mask)
+    #img2_fg = cv2.bitwise_and(logo_img, logo_img, mask=logo_mask)
     # Put logo in ROI and modify the main image
-    dst = cv2.add(img1_bg, img2_fg)
-    frame[50:rows + 50, keyboard_x-10:cols + keyboard_x-10] = dst
+    #dst = cv2.add(img1_bg, img2_fg)
+    #frame[keyboard_unit:rows + keyboard_unit, keyboard_x-int(keyboard_unit/5):cols + keyboard_x-int(keyboard_unit/5)] = dst
 
     # show the output frame and break the loop by button 'q'
     cv2.imshow("Frame", frame)
+    cv2.imshow("Frame2", frame_)
+
     key = cv2.waitKey(1) & 0xFF
     if key == ord("q"):
         break
